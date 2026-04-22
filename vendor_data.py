@@ -118,7 +118,7 @@ _AGG["diversity_cert"] = _AGG["competitive_flag"] >= _AGG["competitive_flag"].me
 VENDORS = _AGG.rename(columns={"Location Name": "name"})
 
 # ── Part demand ───────────────────────────────────────────────────────────────
-_PARTS_AGG = _RAW.groupby("Product Name").agg(
+_PARTS_AGG = _VENDOR_ROWS.groupby("Product Name").agg(
     monthly_demand      = ("Quantity Needed",    lambda x: int(x.sum() / 3)),
     co2_emissions_total = ("co2_emissions",      "sum"),
     total_cost_total    = ("total_cost",         "sum"),
@@ -161,12 +161,15 @@ PARTS = _PARTS_AGG.rename(columns={"Product Name": "name"})[
 # [FIX 2] Size on peak CONCURRENT inventory, not total throughput.
 # Peak concurrent per part = MOQ (order just received) + safety stock (reorder buffer).
 # reorder_point_days = 14 days, matching simulation.py.
-_REORDER_DAYS = 14
+# AFTER
+_REORDER_DAYS = 30   # matches simulation reorder_point_days fix
 _peak_concurrent_m3 = 0.0
 for _, _part in PARTS.iterrows():
     _vendor       = VENDORS[VENDORS["vendor_id"] == _part["preferred_vendor"]].iloc[0]
     _moq          = max(1, int(_vendor["moq"]))
-    _daily_demand = _part["monthly_demand"] / 30
+    # Use implied daily demand (qty/lead_time) — consistent with simulation.py
+    _part_rows    = _RAW[_RAW["Product Name"] == _part["name"]]
+    _daily_demand = (_part_rows["Quantity Needed"] / _part_rows["Lead Time (days)"].replace(0, np.nan)).mean()
     _safety_stock = _daily_demand * _REORDER_DAYS
     _peak_concurrent_m3 += (_moq + _safety_stock) * _part["unit_volume_m3"]
 
