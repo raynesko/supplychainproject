@@ -23,6 +23,7 @@ CHANGES vs previous version:
 import pandas as pd
 import numpy as np
 from vendor_data import VENDORS
+from simulation import simulate_procurement
 
 
 def normalize(series, invert=False):
@@ -33,14 +34,17 @@ def normalize(series, invert=False):
     return (100 - norm) if invert else norm
 
 
+# AFTER
 def score_vendors(
     w_env=0.33, w_econ=0.33, w_soc=0.34,
     # Environmental sub-weights
-    w_carbon=0.50, w_ontime=0.30, w_transit_speed=0.20,
+    w_carbon=0.70, w_ontime=0.30,
     # Economic sub-weights
     w_totalcost=0.45, w_moq_impact=0.20, w_carrying=0.20, w_penalty=0.15,
-    # Social sub-weights — [FIX 1]: domestic sourcing is now the anchor signal
+    # Social sub-weights
     w_domestic=0.50, w_iso=0.30, w_diversity=0.20,
+    # Simulation penalty — passed in from dashboard to avoid re-running Monte Carlo
+    sim_penalty_by_vendor=None,
 ):
     df = VENDORS.copy()
 
@@ -48,11 +52,11 @@ def score_vendors(
     # KPI 1: CO2 Emissions = CO2/kg × weight × qty  (lower → invert)
     carbon_score  = normalize(df["co2_emissions_total"], invert=True)
     ontime_score  = normalize(df["on_time_rate"])
-    speed_score   = normalize(df["transit_speed_days"],  invert=True)
+    
     df["score_env"] = (
         w_carbon        * carbon_score +
-        w_ontime        * ontime_score +
-        w_transit_speed * speed_score
+        w_ontime        * ontime_score 
+        
     )
 
     # ── Economic pillar ───────────────────────────────────────────────────────
@@ -61,7 +65,13 @@ def score_vendors(
     # KPI 4: MOQ Impact = MOQ / Qty  (lower ratio = more flexible → invert)
     moq_score        = normalize(df["moq_impact_mean"],   invert=True)
     carrying_score   = normalize(df["carrying_cost"],     invert=True)
-    penalty_score    = normalize(df["penalty_cost_day"],  invert=True)
+    # AFTER
+    if sim_penalty_by_vendor is not None:
+        df = df.merge(sim_penalty_by_vendor, on="vendor_id", how="left")
+        df["sim_penalty"] = df["sim_penalty"].fillna(0)
+        penalty_score = normalize(df["sim_penalty"], invert=True)
+    else:
+        penalty_score = normalize(df["penalty_cost_day"], invert=True)
     df["score_econ"] = (
         w_totalcost  * total_cost_score +
         w_moq_impact * moq_score +
