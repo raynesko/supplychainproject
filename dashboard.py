@@ -1,5 +1,5 @@
-"""
-NJ Transit Sustainability Dashboard — FIFA 2026
+﻿"""
+NJ Transit Sustainability Dashboard â€” FIFA 2026
 KPI-driven: CO2 Emissions, Total Cost, Lead Time, MOQ Impact.
 
 Run:
@@ -13,15 +13,16 @@ from dash import dcc, html, Input, Output
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+import os
 
 from vendor_data import VENDORS, PARTS, WAREHOUSE
 from scorecard import score_vendors
 from simulation import simulate_procurement
 
-# ── pre-run simulation once at startup ────────────────────────────────────────
+# â”€â”€ pre-run simulation once at startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 sim_df, base_util, base_cost, base_penalty, base_co2 = simulate_procurement(n_simulations=500)
 
-# Pre-compute sim penalty per vendor — passed into scorecard so it uses real
+# Pre-compute sim penalty per vendor â€” passed into scorecard so it uses real
 # Monte Carlo penalty instead of the raw penalty_cost_day column
 vendor_penalty = (
     sim_df.groupby("vendor")["avg_penalty_cost_usd"]
@@ -30,8 +31,9 @@ vendor_penalty = (
     .rename(columns={"vendor": "vendor_id", "avg_penalty_cost_usd": "sim_penalty"})
 )
 
-# ── app ────────────────────────────────────────────────────────────────────────
-app = dash.Dash(__name__, title="NJ Transit — Sustainability Dashboard")
+# â”€â”€ app â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+app = dash.Dash(__name__, title="NJ Transit - Sustainability Dashboard")
+server = app.server
 
 TEAL   = "#1D9E75"; BLUE   = "#378ADD"; AMBER = "#EF9F27"
 CORAL  = "#D85A30"; GRAY   = "#888780"; GREEN = "#639922"
@@ -54,17 +56,17 @@ KPI_NOTE = html.Div(
     style={"background":"#E8F4FD","borderRadius":"8px","padding":"0.5rem 0.85rem",
            "marginBottom":"12px","fontSize":"11px","color":"#2C5F8A","lineHeight":"1.6"},
     children=[
-        html.Strong("KPI Formulas — "),
-        "① CO₂ = CO₂/kg × Weight × Qty  ",
-        html.Span("·", style={"margin":"0 4px"}),
-        "② Total Cost = (Price × Qty) + (Ship/kg × Weight × Qty) + In-Transit  ",
-        html.Span("·", style={"margin":"0 4px"}),
-        "③ Lead Time (days)  ",
-        html.Span("·", style={"margin":"0 4px"}),
-        "④ MOQ Impact = MOQ ÷ Qty  ",
-        html.Span("·", style={"margin":"0 4px"}),
+        html.Strong("KPI Formulas - "),
+        "1) CO2 = CO2/kg x Weight x Qty  ",
+        html.Span(" - ", style={"margin":"0 4px"}),
+        "2) Total Cost = (Price x Qty) + (Ship/kg x Weight x Qty) + In-Transit  ",
+        html.Span(" - ", style={"margin":"0 4px"}),
+        "3) Lead Time (days)  ",
+        html.Span(" - ", style={"margin":"0 4px"}),
+        "4) MOQ Impact = MOQ / Qty  ",
+        html.Span(" - ", style={"margin":"0 4px"}),
         html.Strong("Monte Carlo: "),
-        "500 simulations · 90-day FIFA window · reorder point = 30 days · penalty from actual stockout days",
+        "500 simulations - 90-day FIFA window - reorder point = 30 days - penalty from actual stockout days",
     ]
 )
 
@@ -77,27 +79,27 @@ available_m3 = (
 app.layout = html.Div(
     style={"fontFamily":"system-ui,sans-serif","maxWidth":"1140px","margin":"0 auto","padding":"1.5rem"},
     children=[
-        # ── header ────────────────────────────────────────────────────────────
+        # â”€â”€ header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"borderBottom":f"2px solid {TEAL}","paddingBottom":"0.75rem","marginBottom":"1rem"},
                  children=[
             html.Div(style={"display":"flex","justifyContent":"space-between",
                             "alignItems":"center","flexWrap":"wrap","gap":"8px"}, children=[
-                html.H1("NJ Transit — Vendor Sustainability Dashboard",
+                html.H1("NJ Transit - Vendor Sustainability Dashboard",
                         style={"fontSize":"18px","fontWeight":"500","margin":0}),
                 html.Div(style={"display":"flex","gap":"6px"}, children=[
                     html.Span("FIFA 2026", style={"background":"#E1F5EE","color":"#0F6E56",
                               "fontSize":"11px","fontWeight":"500","padding":"3px 10px","borderRadius":"20px"}),
-                    html.Span("10 vendors · 8 parts", style={"background":"#F1EFE8","color":"#5F5E5A",
+                    html.Span("10 vendors - 8 parts", style={"background":"#F1EFE8","color":"#5F5E5A",
                               "fontSize":"11px","padding":"3px 10px","borderRadius":"20px"}),
                 ]),
             ]),
-            html.P("Select a scenario to reweight sustainability pillars — all KPI charts update live.",
+            html.P("Select a scenario to reweight sustainability pillars - all KPI charts update live.",
                    style={"fontSize":"13px","color":"#888780","margin":"4px 0 0"}),
         ]),
 
         KPI_NOTE,
 
-        # ── controls + KPIs ───────────────────────────────────────────────────
+        # â”€â”€ controls + KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"display":"grid","gridTemplateColumns":"0.9fr 1fr",
                         "gap":"12px","marginBottom":"12px"}, children=[
 
@@ -107,9 +109,9 @@ app.layout = html.Div(
                 dcc.RadioItems(id="scenario",
                     options=[
                         {"label":"  Balanced (33 / 33 / 34)",       "value":"balanced"},
-                        {"label":"  Lowest carbon — KPI 1 (70/15/15)","value":"green"},
-                        {"label":"  Fastest lead time — KPI 3 (20/60/20)","value":"fast"},
-                        {"label":"  Lowest cost — KPI 2 (15/70/15)", "value":"cheap"},
+                        {"label":"  Lowest carbon - KPI 1 (70/15/15)","value":"green"},
+                        {"label":"  Fastest lead time - KPI 3 (20/60/20)","value":"fast"},
+                        {"label":"  Lowest cost - KPI 2 (15/70/15)", "value":"cheap"},
                     ],
                     value="balanced",
                     labelStyle={"display":"block","marginBottom":"12px","fontSize":"13px","cursor":"pointer"},
@@ -117,8 +119,8 @@ app.layout = html.Div(
                 html.Div(style={"marginTop":"12px","fontSize":"11px","color":"#888780","lineHeight":"1.7"},
                          children=[
                     html.Strong("Pillars: "),
-                    "Env = CO₂ (70%) + On-time (30%)  ·  ",
-                    "Econ = Cost (45%) + MOQ (20%) + Carrying (20%) + Penalty (15%)  ·  ",
+                    "Env = CO2 (70%) + On-time (30%)  -  ",
+                    "Econ = Cost (45%) + MOQ (20%) + Carrying (20%) + Penalty (15%)  -  ",
                     "Social = Domestic (50%) + ISO proxy (30%) + Diversity (20%)",
                 ]),
             ]),
@@ -129,18 +131,18 @@ app.layout = html.Div(
                     html.Div(style=metric, children=[
                         html.P("Warehouse utilization", style={"fontSize":"11px","color":"#5F5E5A","margin":0}),
                         html.P(id="kpi-util", style={"fontSize":"24px","fontWeight":"500","margin":0}),
-                        html.P(f"of {WAREHOUSE['total_capacity_m3']:,} m³ total",
+                        html.P(f"of {WAREHOUSE['total_capacity_m3']:,} m3 total",
                                style={"fontSize":"10px","color":"#888780","margin":0}),
                     ]),
                     html.Div(style=metric, children=[
-                        html.P("KPI 2 · Procurement cost", style={"fontSize":"11px","color":"#5F5E5A","margin":0}),
+                        html.P("KPI 2 - Procurement cost", style={"fontSize":"11px","color":"#5F5E5A","margin":0}),
                         html.P(id="kpi-cost", style={"fontSize":"24px","fontWeight":"500","margin":0}),
                         html.P("90-day horizon", style={"fontSize":"10px","color":"#888780","margin":0}),
                     ]),
                 ]),
                 html.Div(style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"8px"}, children=[
                     html.Div(style=metric, children=[
-                        html.P("KPI 1 · CO₂ emissions", style={"fontSize":"11px","color":"#5F5E5A","margin":0}),
+                        html.P("KPI 1 - CO2 emissions", style={"fontSize":"11px","color":"#5F5E5A","margin":0}),
                         html.P(id="kpi-co2", style={"fontSize":"24px","fontWeight":"500","margin":0,"color":GREEN}),
                         html.P("vendor sourcing only", style={"fontSize":"10px","color":"#888780","margin":0}),
                     ]),
@@ -157,25 +159,25 @@ app.layout = html.Div(
             ]),
         ]),
 
-        # ── row 1: composite + radar ───────────────────────────────────────────
+        # â”€â”€ row 1: composite + radar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"12px","marginBottom":"12px"}, children=[
             html.Div(style=card,children=[dcc.Graph(id="chart-composite",style={"height":"300px"})]),
             html.Div(style=card,children=[dcc.Graph(id="chart-radar",    style={"height":"300px"})]),
         ]),
 
-        # ── row 2: KPI 1 CO2 + KPI 2 Total Cost ───────────────────────────────
+        # â”€â”€ row 2: KPI 1 CO2 + KPI 2 Total Cost â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"12px","marginBottom":"12px"}, children=[
             html.Div(style=card,children=[dcc.Graph(id="chart-co2",  style={"height":"280px"})]),
             html.Div(style=card,children=[dcc.Graph(id="chart-cost", style={"height":"280px"})]),
         ]),
 
-        # ── row 3: KPI 3 Lead Time + KPI 4 MOQ Impact ─────────────────────────
+        # â”€â”€ row 3: KPI 3 Lead Time + KPI 4 MOQ Impact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"12px","marginBottom":"12px"}, children=[
             html.Div(style=card,children=[dcc.Graph(id="chart-leadtime", style={"height":"260px"})]),
             html.Div(style=card,children=[dcc.Graph(id="chart-moq",      style={"height":"260px"})]),
         ]),
 
-        # ── row 4: stockout risk + transport mix ───────────────────────────────
+        # â”€â”€ row 4: stockout risk + transport mix â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         html.Div(style={"display":"grid","gridTemplateColumns":"1fr 1fr","gap":"12px"}, children=[
             html.Div(style=card,children=[dcc.Graph(id="chart-stockout",  style={"height":"260px"})]),
             html.Div(style=card,children=[dcc.Graph(id="chart-transport", style={"height":"260px"})]),
@@ -212,15 +214,15 @@ def update(scenario):
     w_econ_n= w_econ / t
     w_soc_n = w_soc / t
 
-    # Score vendors — pass real Monte Carlo penalty so economic pillar is grounded
+    # Score vendors â€” pass real Monte Carlo penalty so economic pillar is grounded
     scores     = score_vendors(w_env=w_env_n, w_econ=w_econ_n, w_soc=w_soc_n,
                                sim_penalty_by_vendor=vendor_penalty)
     top_vendor = scores.iloc[0]["name"]
     base       = dict(margin=LB, font=FONT, **BG)
 
-    # ── KPI metric values ─────────────────────────────────────────────────────
+    # â”€â”€ KPI metric values â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Warehouse util: from Monte Carlo simulation (fixed, vendor assignments don't
-    # change with pillar weights — stated as Monte Carlo baseline)
+    # change with pillar weights â€” stated as Monte Carlo baseline)
     str_util    = f"{base_util}%"
 
     # Cost & CO2: weighted blend across vendors by composite score
@@ -232,10 +234,10 @@ def update(scenario):
     str_cost      = f"${new_cost/1e6:.2f}M"
     str_co2       = f"{new_co2/1e3:.1f}k kg"
 
-    # Penalty: real Monte Carlo total (fixed baseline — doesn't change with weights)
+    # Penalty: real Monte Carlo total (fixed baseline â€” doesn't change with weights)
     str_penalty   = f"${base_penalty/1e3:.0f}K"
 
-    # ── 1. Composite score bar ────────────────────────────────────────────────
+    # â”€â”€ 1. Composite score bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     bar_cols = [VENDOR_COLORS[i % len(VENDOR_COLORS)] for i in range(len(scores))]
     bar_cols[0] = TEAL
     fig1 = go.Figure(go.Bar(
@@ -245,12 +247,12 @@ def update(scenario):
         hovertemplate="<b>%{x}</b><br>Composite: %{y:.1f}/100<extra></extra>",
     ))
     fig1.update_layout(**base,
-        title=dict(text="Composite sustainability score (0–100)", font=dict(size=13), x=0),
+        title=dict(text="Composite sustainability score (0-100)", font=dict(size=13), x=0),
         yaxis=dict(range=[0,115], showgrid=True, gridcolor=GC),
         xaxis=dict(showgrid=False, tickangle=-25, tickfont=dict(size=10)),
     )
 
-    # ── 2. Radar — top 3 vendors ──────────────────────────────────────────────
+    # â”€â”€ 2. Radar â€” top 3 vendors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     cats = ["Environmental<br>(KPI 1)", "Economic<br>(KPI 2+4)", "Social<br>(domestic)"]
     fig2 = go.Figure()
     rcols = [TEAL, BLUE, AMBER]
@@ -263,12 +265,12 @@ def update(scenario):
             fillcolor=rcols[i % 3], opacity=0.15,
         ))
     fig2.update_layout(**base,
-        title=dict(text="Pillar scores — top 3 vendors", font=dict(size=13), x=0),
+        title=dict(text="Pillar scores - top 3 vendors", font=dict(size=13), x=0),
         polar=dict(radialaxis=dict(range=[0,100], showticklabels=False)),
         legend=dict(orientation="h", y=-0.1, font=dict(size=10)),
     )
 
-    # ── 3. KPI 1: CO2 emissions ───────────────────────────────────────────────
+    # â”€â”€ 3. KPI 1: CO2 emissions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     co2_sorted = VENDORS.sort_values("co2_emissions_total")
     fig3 = go.Figure(go.Bar(
         x=co2_sorted["name"],
@@ -276,15 +278,15 @@ def update(scenario):
         marker_color=[TEAL if v == top_vendor else BLUE for v in co2_sorted["name"]],
         text=co2_sorted["co2_emissions_total"].apply(lambda v: f"{v/1e3:.1f}k"),
         textposition="outside",
-        hovertemplate="<b>%{x}</b><br>CO₂: %{y:,.0f} kg<extra></extra>",
+        hovertemplate="<b>%{x}</b><br>CO2: %{y:,.0f} kg<extra></extra>",
     ))
     fig3.update_layout(**base,
-        title=dict(text="KPI 1 · CO₂ Emissions (kg) — vendor sourcing rows only", font=dict(size=13), x=0),
-        yaxis=dict(showgrid=True, gridcolor=GC, title="kg CO₂"),
+        title=dict(text="KPI 1 - CO2 Emissions (kg) - vendor sourcing rows only", font=dict(size=13), x=0),
+        yaxis=dict(showgrid=True, gridcolor=GC, title="kg CO2"),
         xaxis=dict(showgrid=False, tickangle=-25, tickfont=dict(size=10)),
     )
 
-    # ── 4. KPI 2: Total cost stacked bar ──────────────────────────────────────
+    # â”€â”€ 4. KPI 2: Total cost stacked bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     cost_sorted = VENDORS.sort_values("total_cost_total", ascending=False)
     fig4 = go.Figure()
     fig4.add_trace(go.Bar(
@@ -301,13 +303,13 @@ def update(scenario):
     ))
     fig4.update_layout(**base,
         barmode="stack",
-        title=dict(text="KPI 2 · Total Cost = Purchase + Shipping + In-Transit", font=dict(size=13), x=0),
+        title=dict(text="KPI 2 - Total Cost = Purchase + Shipping + In-Transit", font=dict(size=13), x=0),
         yaxis=dict(showgrid=True, gridcolor=GC, title="USD ($)"),
         xaxis=dict(showgrid=False, tickangle=-25, tickfont=dict(size=10)),
         legend=dict(orientation="h", y=1.08, font=dict(size=10)),
     )
 
-    # ── 5. KPI 3: Lead time with std error ────────────────────────────────────
+    # â”€â”€ 5. KPI 3: Lead time with std error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     fig5 = go.Figure()
     for i, row in VENDORS.iterrows():
         fig5.add_trace(go.Bar(
@@ -318,16 +320,16 @@ def update(scenario):
                 visible=True, color="#B4B2A9"),
             marker_color=VENDOR_COLORS[i % len(VENDOR_COLORS)],
             name=row["name"], showlegend=False,
-            hovertemplate=f"<b>{row['name']}</b><br>Lead Time: {row['lead_time_days']:.1f}d ± {row['lead_time_std']:.1f}d<extra></extra>",
+            hovertemplate=f"<b>{row['name']}</b><br>Lead Time: {row['lead_time_days']:.1f}d +/- {row['lead_time_std']:.1f}d<extra></extra>",
         ))
     fig5.update_layout(**base,
-        title=dict(text="KPI 3 · Lead Time (days) · error bars = std dev", font=dict(size=13), x=0),
+        title=dict(text="KPI 3 - Lead Time (days) - error bars = std dev", font=dict(size=13), x=0),
         yaxis=dict(title="Days", showgrid=True, gridcolor=GC),
         xaxis=dict(showgrid=False, tickfont=dict(size=10)),
         bargap=0.3,
     )
 
-    # ── 6. KPI 4: MOQ Impact ──────────────────────────────────────────────────
+    # â”€â”€ 6. KPI 4: MOQ Impact â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     moq_sorted = VENDORS.sort_values("moq_impact_mean", ascending=False)
     moq_cols   = [CORAL if v > moq_sorted["moq_impact_mean"].median() else GREEN
                   for v in moq_sorted["moq_impact_mean"]]
@@ -339,12 +341,12 @@ def update(scenario):
         hovertemplate="<b>%{x}</b><br>MOQ/Qty: %{y:.2f}  (>1 = forced over-order)<extra></extra>",
     ))
     fig6.update_layout(**base,
-        title=dict(text="KPI 4 · MOQ Impact = MOQ ÷ Qty  ·  red = above median (worse)", font=dict(size=13), x=0),
+        title=dict(text="KPI 4 - MOQ Impact = MOQ / Qty - red = above median (worse)", font=dict(size=13), x=0),
         yaxis=dict(showgrid=True, gridcolor=GC, title="Ratio"),
         xaxis=dict(showgrid=False, tickangle=-25, tickfont=dict(size=10)),
     )
 
-    # ── 7. Stockout risk (Monte Carlo) ────────────────────────────────────────
+    # â”€â”€ 7. Stockout risk (Monte Carlo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     crit_col = {5: CORAL, 4: AMBER, 3: BLUE, 2: GRAY, 1: GREEN}
     scols = [crit_col.get(c, GRAY) for c in sim_df["criticality"]]
     fig7 = go.Figure(go.Bar(
@@ -361,12 +363,12 @@ def update(scenario):
         ),
     ))
     fig7.update_layout(**base,
-        title=dict(text="Stockout risk % by part (Monte Carlo) · red = critical/emergency", font=dict(size=13), x=0),
+        title=dict(text="Stockout risk % by part (Monte Carlo) - red = critical/emergency", font=dict(size=13), x=0),
         yaxis=dict(range=[0,15], showgrid=True, gridcolor=GC, title="Risk %"),
         xaxis=dict(showgrid=False, tickangle=-25, tickfont=dict(size=10)),
     )
 
-    # ── 8. Transport mode mix ──────────────────────────────────────────────────
+    # â”€â”€ 8. Transport mode mix â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     mode_counts = VENDORS["transport_mode"].value_counts()
     mode_colors = {"Road": TEAL, "Rail": BLUE, "Sea": AMBER, "Air": CORAL}
     fig8 = go.Figure(go.Pie(
@@ -390,4 +392,5 @@ if __name__ == "__main__":
     print(f"Total penalty exposure (Monte Carlo):         ${base_penalty:,.0f}")
     print(f"Total CO2 (vendor sourcing):                  {base_co2:,.0f} kg")
     print("Open: http://127.0.0.1:8050")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8050)), debug=False)
+
